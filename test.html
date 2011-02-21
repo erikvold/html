@@ -9,7 +9,14 @@
     div({id: "content"},
       h1("Test"),
       p({style: ""},
-        "This is a test page."
+        "This is a test page. ",
+        a({
+          title: "A onclick test link",
+          href: "#",
+          onclick: function() {
+            alert("test!");
+          }
+        }, "Click test here")
       )
     )
   )

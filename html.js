@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-(function() {
+(function(global) {
   var tags = [
     "html", "head", "body", "script", "meta", "title", "link",
     "div", "p", "span", "a", "img", "br", "hr", "em", "strong",
@@ -31,28 +31,41 @@ THE SOFTWARE.
     "form", "fieldset", "input", "textarea", "label", "select", "option"
   ];
 
-  function appendChildren(ele, children) {
-    for (var i = 0, child; child = children[i]; i++) {
+  function appendChildren(ele, children, startIndex) {
+    for (var i = startIndex, child; child = children[i]; i++) {
       if (Object.isString(child))
         ele.appendChild(document.createTextNode(child));
-      else if (Object.isArray(child)) {
+      else if (Object.isArray(child))
         appendChildren(ele, child);
-      } else {
+      else
         ele.appendChild(child);
-      }
     }
-  }
-
-  function html_tag(tagName, attrs) {
-    var hasAttrs = !((Object.isString(attrs) || Object.isElement(attrs))),
-        ele = new Element(tagName, hasAttrs ? attrs : {});
-
-    appendChildren(ele, Array.prototype.slice.call(arguments, hasAttrs ? 2 : 1));
-
     return ele;
   }
 
-  for (var i = 0, tag; tag = tags[i]; i++) window[tag] = html_tag.bind({}, tag);
+  function html_tag(tagName, attrs) {
+    var ele = event, events = {}, value, eventMatch = /^on(.+)/i;
+
+    if ((Object.isString(attrs) || Object.isElement(attrs)))
+      return appendChildren(new Element(tagName), arguments, 1);
+
+    var oldAttrs = attrs;
+    attrs = {};
+    for (var prop in oldAttrs) {
+      if ((event = prop.match(eventMatch)) && Object.isFunction(oldAttrs[prop])) {
+        events[event[1]] = oldAttrs[prop];
+      } else {
+        attrs[prop] = oldAttrs[prop];
+      }
+    }
+
+    var ele = new Element(tagName, attrs);
+    for (var event in events) ele.observe(event, events[event])
+
+    return appendChildren(ele, arguments, 2);
+  }
+
+  for (var i = 0, tag; tag = tags[i]; i++) global[tag] = html_tag.bind({}, tag);
 
   tags = html_tag = null
-})();
+})(this);
