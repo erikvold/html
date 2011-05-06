@@ -31,14 +31,39 @@ THE SOFTWARE.
     "form", "fieldset", "input", "textarea", "label", "select", "option"
   ];
 
+  var bind = function(func) {
+    var slice = Array.prototype.slice,
+        args = slice.call(arguments, 1);
+    return function() {
+      return func.apply({}, args.concat(slice.call(arguments)));
+    };
+  };
+
+  function Element(tagName, attrs) {
+    var ele = document.createElement(tagName);
+    for (attr in attrs) ele.setAttribute(attr, attrs[attr]);
+    return ele;
+  }
+
+  var observe;
+  if (window.addEventListener)
+    observe = function(ele, type, func) {ele.addEventListener(type, func, false)}
+  else
+    observe = function(ele, type, func) {ele.attachEvent("on" + type, func)}
+
   function appendChildren(ele, children, startIndex) {
     for (var i = startIndex, child; child = children[i]; i++) {
-      if (Object.isString(child))
-        ele.appendChild(document.createTextNode(child));
-      else if (Object.isArray(child))
-        appendChildren(ele, child);
-      else
-        ele.appendChild(child);
+      switch(Object.prototype.toString.call(child)) {
+        case "[object String]":
+          ele.appendChild(document.createTextNode(child));
+          break;
+        case "[object Array]":
+          appendChildren(ele, child);
+          break;
+        default:
+          ele.appendChild(child);
+          break;
+      }
     }
     return ele;
   }
@@ -46,26 +71,25 @@ THE SOFTWARE.
   function html_tag(tagName, attrs) {
     var ele = event, events = {}, value, eventMatch = /^on(.+)/i;
 
-    if ((Object.isString(attrs) || Object.isElement(attrs)))
+    if (attrs && (typeof attrs === "string" || typeof attrs.nodeType === "number"))
       return appendChildren(new Element(tagName), arguments, 1);
 
     var oldAttrs = attrs;
     attrs = {};
     for (var prop in oldAttrs) {
-      if ((event = prop.match(eventMatch)) && Object.isFunction(oldAttrs[prop])) {
+      if ((event = prop.match(eventMatch)) && typeof oldAttrs[prop] === "function")
         events[event[1]] = oldAttrs[prop];
-      } else {
+      else
         attrs[prop] = oldAttrs[prop];
-      }
     }
 
     var ele = new Element(tagName, attrs);
-    for (var event in events) ele.observe(event, events[event])
+    for (var event in events) observe(ele, event, events[event])
 
     return appendChildren(ele, arguments, 2);
   }
 
-  for (var i = 0, tag; tag = tags[i]; i++) global[tag] = html_tag.bind({}, tag);
+  for (var i = 0, tag; tag = tags[i]; i++) global[tag] = bind(html_tag, tag);
 
-  tags = html_tag = null
+  tags = null;
 })(this);
