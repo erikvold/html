@@ -52,7 +52,7 @@ THE SOFTWARE.
     observe = function(ele, type, func) {ele.attachEvent("on" + type, func)}
 
   function appendChildren(ele, children, startIndex) {
-    for (var i = startIndex, child; child = children[i]; i++) {
+    for (var i = startIndex || 0, child; child = children[i]; i++) {
       switch(Object.prototype.toString.call(child)) {
         case "[object String]":
           ele.appendChild(document.createTextNode(child));
