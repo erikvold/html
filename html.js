@@ -41,7 +41,7 @@ THE SOFTWARE.
 
   function Element(tagName, attrs) {
     var ele = document.createElement(tagName);
-    for (attr in attrs) ele.setAttribute(attr, attrs[attr]);
+    for (var attr in attrs) ele.setAttribute(attr, attrs[attr]);
     return ele;
   }
 
