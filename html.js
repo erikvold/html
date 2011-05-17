@@ -20,16 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-(function(global) {
-  var tags = [
-    "html", "head", "body", "script", "meta", "title", "link",
-    "div", "p", "span", "a", "img", "br", "hr", "em", "strong",
-    "table", "tr", "th", "td", "thead", "tbody", "tfoot",
-    "ul", "ol", "li", 
-    "dl", "dt", "dd",
-    "h1", "h2", "h3", "h4", "h5", "h6", "h7",
-    "form", "fieldset", "input", "textarea", "label", "select", "option"
-  ];
+var html = (function() {
+  var templates = {};
 
   var bind = function(func) {
     var slice = Array.prototype.slice,
@@ -68,7 +60,7 @@ THE SOFTWARE.
     return ele;
   }
 
-  function html_tag(tagName, attrs) {
+  function html(tagName, attrs) {
     var ele = event, events = {}, value, eventMatch = /^on(.+)/i;
 
     if (attrs && (typeof attrs === "string" || typeof attrs.nodeType === "number"))
@@ -87,9 +79,33 @@ THE SOFTWARE.
     for (var event in events) observe(ele, event, events[event])
 
     return appendChildren(ele, arguments, 2);
-  }
+  };
+  html.register = function html_register(aKey, aFunc) {
+    return templates[aKey] = aFunc;
+  };
+  html.render = function html_render(aKey, aData) {
+    var template = templates[aKey];
+    if (!template)
+      throw new Error("There is no template with the key '" + aKey + "'");
 
-  for (var i = 0, tag; tag = tags[i]; i++) global[tag] = bind(html_tag, tag);
+    if ("[object Array]" == Object.prototype.toString.call(aData)) {
+      var rtn = [];
+      for (var i = 0, len = aData.length; i < len; i++)
+        rtn.push(template(aData[i]));
+      return rtn;
+    } else {
+      return template(aData);
+    }
+  };
+  html.exportTags = function html_exportTags(aTags) {
+    if ("[object String]" == Object.prototype.toString.call(aTags))
+      aTags = [aTags];
 
-  tags = null;
-})(this);
+    var rtn = {};
+    for (var i = 0, tag; tag = aTags[i]; i++)
+      rtn[tag] = bind(html_tag, tag);
+    return rtn;
+  };
+
+  return html;
+})();
