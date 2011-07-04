@@ -71,7 +71,7 @@ var html = (function() {
     for (var prop in oldAttrs) {
       if ((event = prop.match(eventMatch)) && typeof oldAttrs[prop] === "function")
         events[event[1]] = oldAttrs[prop];
-      else
+      else if (oldAttrs[prop] !== undefined)
         attrs[prop] = oldAttrs[prop];
     }
 
