@@ -38,19 +38,46 @@ var html = (function() {
   }
 
   var observe;
-  if (window.addEventListener)
-    observe = function(ele, type, func) {ele.addEventListener(type, func, false)}
-  else
-    observe = function(ele, type, func) {ele.attachEvent("on" + type, func)}
+  if (window.addEventListener) {
+    observe = function(ele, type, func) {
+      ele.addEventListener(type, func, false)
+    };
+  } else {
+    observe = function(ele, type, func) {ele.attachEvent("on" + type, func)};
+  }
 
-  function appendChildren(ele, children, startIndex) {
+  function html(tagName, attrs) {
+    var ele = event, events = {}, value, eventMatch = /^on(.+)/i;
+
+    if (attrs && (typeof attrs === "string"
+        || typeof attrs.nodeType === "number"))
+      return html_appendChildren(new Element(tagName), arguments, 1);
+
+    var oldAttrs = attrs;
+    attrs = {};
+    for (var prop in oldAttrs) {
+      if ((event = prop.match(eventMatch))
+          && typeof oldAttrs[prop] === "function")
+        events[event[1]] = oldAttrs[prop];
+      else if (oldAttrs[prop] !== undefined)
+        attrs[prop] = oldAttrs[prop];
+    }
+
+    var ele = new Element(tagName, attrs);
+    for (var event in events) observe(ele, event, events[event])
+
+    return html_appendChildren(ele, arguments, 2);
+  };
+
+  html.appendChildren =
+      function html_appendChildren(ele, children, startIndex) {
     for (var i = startIndex || 0, child; child = children[i]; i++) {
       switch(Object.prototype.toString.call(child)) {
         case "[object String]":
           ele.appendChild(document.createTextNode(child));
           break;
         case "[object Array]":
-          appendChildren(ele, child);
+          html_appendChildren(ele, child);
           break;
         default:
           ele.appendChild(child);
@@ -60,29 +87,10 @@ var html = (function() {
     return ele;
   }
 
-  function html(tagName, attrs) {
-    var ele = event, events = {}, value, eventMatch = /^on(.+)/i;
-
-    if (attrs && (typeof attrs === "string" || typeof attrs.nodeType === "number"))
-      return appendChildren(new Element(tagName), arguments, 1);
-
-    var oldAttrs = attrs;
-    attrs = {};
-    for (var prop in oldAttrs) {
-      if ((event = prop.match(eventMatch)) && typeof oldAttrs[prop] === "function")
-        events[event[1]] = oldAttrs[prop];
-      else if (oldAttrs[prop] !== undefined)
-        attrs[prop] = oldAttrs[prop];
-    }
-
-    var ele = new Element(tagName, attrs);
-    for (var event in events) observe(ele, event, events[event])
-
-    return appendChildren(ele, arguments, 2);
-  };
   html.register = function html_register(aKey, aFunc) {
     return templates[aKey] = aFunc;
   };
+
   html.render = function html_render(aKey, aData) {
     var template = templates[aKey];
     if (!template)
@@ -97,6 +105,7 @@ var html = (function() {
       return template(aData);
     }
   };
+
   html.exportTags = function html_exportTags(aTags) {
     if ("[object String]" == Object.prototype.toString.call(aTags))
       aTags = [aTags];
