@@ -53,7 +53,7 @@ var html = (function() {
 
     if (attrs && (typeof attrs === "string"
         || typeof attrs.nodeType === "number"))
-      return html_appendChildren(new Element(tagName), arguments, 1);
+      return html.appendChildren(new Element(tagName), arguments, 1);
 
     var oldAttrs = attrs;
     attrs = {};
@@ -68,7 +68,7 @@ var html = (function() {
     var ele = new Element(tagName, attrs);
     for (var event in events) observe(ele, event, events[event])
 
-    return html_appendChildren(ele, arguments, 2);
+    return html.appendChildren(ele, arguments, 2);
   };
 
   html.appendChildren =
@@ -79,7 +79,7 @@ var html = (function() {
           ele.appendChild(document.createTextNode(child));
           break;
         case "[object Array]":
-          html_appendChildren(ele, child);
+          html.appendChildren(ele, child);
           break;
         default:
           ele.appendChild(child);
