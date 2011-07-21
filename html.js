@@ -75,6 +75,8 @@ var html = (function() {
       function html_appendChildren(ele, children, startIndex) {
     for (var i = startIndex || 0, child; child = children[i]; i++) {
       switch(Object.prototype.toString.call(child)) {
+        case "[object Undefined]":
+          continue;
         case "[object String]":
           ele.appendChild(document.createTextNode(child));
           break;
